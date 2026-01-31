@@ -76,55 +76,55 @@ export const TransactionsScreen: React.FC = () => {
             }
         ];
 
-        // Status change options for borrow/lend transactions
-        if (transaction.type !== 'expense') {
-            if (transaction.status !== 'settled') {
-                options.push({
-                    text: '✅ Mark as Paid',
-                    onPress: () => {
-                        showAlert(
-                            'Mark as Paid',
-                            'This will mark the transaction as fully paid. Continue?',
-                            [
-                                { text: 'Cancel', style: 'cancel' },
-                                {
-                                    text: 'Confirm',
-                                    onPress: async () => {
-                                        try {
-                                            await updateTransaction(transaction.id, {
-                                                status: 'settled',
-                                                remainingAmount: 0
-                                            });
-                                            loadTransactions();
-                                            showAlert('Success', 'Transaction marked as paid!');
-                                        } catch (error) {
-                                            showAlert('Error', 'Failed to update transaction');
-                                        }
+        // Status change options for all transactions
+        if (transaction.status !== 'settled') {
+            options.push({
+                text: '✅ Mark as Paid',
+                onPress: () => {
+                    showAlert(
+                        'Mark as Paid',
+                        'This will mark the transaction as fully paid. Continue?',
+                        [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                                text: 'Confirm',
+                                onPress: async () => {
+                                    try {
+                                        await updateTransaction(transaction.id, {
+                                            status: 'settled',
+                                            remainingAmount: 0
+                                        });
+                                        loadTransactions();
+                                        showAlert('Success', 'Transaction marked as paid!');
+                                    } catch (error) {
+                                        showAlert('Error', 'Failed to update transaction');
                                     }
                                 }
-                            ]
-                        );
+                            }
+                        ]
+                    );
+                }
+            });
+        } else {
+            options.push({
+                text: '🔄 Mark as Pending',
+                onPress: async () => {
+                    try {
+                        await updateTransaction(transaction.id, {
+                            status: 'pending',
+                            remainingAmount: transaction.amount
+                        });
+                        loadTransactions();
+                        showAlert('Success', 'Transaction marked as pending!');
+                    } catch (error) {
+                        showAlert('Error', 'Failed to update transaction');
                     }
-                });
-            } else {
-                options.push({
-                    text: '🔄 Mark as Pending',
-                    onPress: async () => {
-                        try {
-                            await updateTransaction(transaction.id, {
-                                status: 'pending',
-                                remainingAmount: transaction.amount
-                            });
-                            loadTransactions();
-                            showAlert('Success', 'Transaction marked as pending!');
-                        } catch (error) {
-                            showAlert('Error', 'Failed to update transaction');
-                        }
-                    }
-                });
-            }
+                }
+            });
+        }
 
-            // Change due date option
+        // Change due date option (only for borrow/lend)
+        if (transaction.type !== 'expense') {
             options.push({
                 text: '📅 Change Due Date',
                 onPress: () => {
@@ -174,6 +174,25 @@ export const TransactionsScreen: React.FC = () => {
 
     const handleAddTransaction = () => {
         navigation.navigate('AddTransaction', { type: 'expense' });
+    };
+
+    const handleDeleteTransaction = (transaction: Transaction) => {
+        showAlert(
+            'Delete Transaction',
+            'Are you sure you want to delete this transaction? This cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await deleteTransaction(transaction.id);
+                        // loadTransactions(); // Store updates automatically usually, but focus effect reloads.
+                        showAlert('Deleted', 'Transaction has been deleted.');
+                    }
+                }
+            ]
+        );
     };
 
     const filters: { label: string; value: FilterType; color: string; icon: string }[] = [
@@ -318,6 +337,7 @@ export const TransactionsScreen: React.FC = () => {
                             currencySymbol={settings.currencySymbol}
                             onPress={() => handleTransactionPress(item)}
                             onLongPress={() => handleTransactionLongPress(item)}
+                            onDelete={() => handleDeleteTransaction(item)}
                         />
                     )}
                     ListEmptyComponent={

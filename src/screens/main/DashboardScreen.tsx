@@ -5,10 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { SummaryCard } from '../../components/common';
 import { TransactionCard } from '../../components/transactions';
 import { useTransactionStore, useSettingsStore, useUIStore } from '../../stores';
-import { formatCurrency, getDueDateStatus, formatDate } from '../../utils/formatters';
+import { formatCurrency, getDueDateStatus } from '../../utils/formatters';
 import { Transaction } from '../../types';
 
 export const DashboardScreen: React.FC = () => {
@@ -34,7 +33,7 @@ export const DashboardScreen: React.FC = () => {
         }, [])
     );
 
-    const recentTransactions = transactions.slice(0, 5);
+    const recentTransactions = transactions.slice(0, 4);
 
     const handleAddTransaction = (type: 'borrow' | 'lend' | 'expense') => {
         navigation.navigate('AddTransaction', { type });
@@ -60,42 +59,39 @@ export const DashboardScreen: React.FC = () => {
             }
         ];
 
-        // Status change for borrow/lend transactions
-        if (transaction.type !== 'expense') {
-            if (transaction.status !== 'settled') {
-                options.push({
-                    text: '✅ Mark as Paid',
-                    onPress: async () => {
-                        try {
-                            await updateTransaction(transaction.id, {
-                                status: 'settled',
-                                remainingAmount: 0
-                            });
-                            loadTransactions();
-                            loadSummary();
-                            showAlert('Success', 'Transaction marked as paid!');
-                        } catch (error) {
-                            showAlert('Error', 'Failed to update');
-                        }
+        if (transaction.status !== 'settled') {
+            options.push({
+                text: '✅ Mark as Paid',
+                onPress: async () => {
+                    try {
+                        await updateTransaction(transaction.id, {
+                            status: 'settled',
+                            remainingAmount: 0
+                        });
+                        loadTransactions();
+                        loadSummary();
+                        showAlert('Success', 'Transaction marked as paid!');
+                    } catch (error) {
+                        showAlert('Error', 'Failed to update');
                     }
-                });
-            } else {
-                options.push({
-                    text: '🔄 Mark Pending',
-                    onPress: async () => {
-                        try {
-                            await updateTransaction(transaction.id, {
-                                status: 'pending',
-                                remainingAmount: transaction.amount
-                            });
-                            loadTransactions();
-                            loadSummary();
-                        } catch (error) {
-                            showAlert('Error', 'Failed to update');
-                        }
+                }
+            });
+        } else {
+            options.push({
+                text: '🔄 Mark Pending',
+                onPress: async () => {
+                    try {
+                        await updateTransaction(transaction.id, {
+                            status: 'pending',
+                            remainingAmount: transaction.amount
+                        });
+                        loadTransactions();
+                        loadSummary();
+                    } catch (error) {
+                        showAlert('Error', 'Failed to update');
                     }
-                });
-            }
+                }
+            });
         }
 
         options.push({
@@ -138,20 +134,28 @@ export const DashboardScreen: React.FC = () => {
         );
     };
 
-    // Calculate overdue and upcoming transactions
-    const activeTransactions = transactions.filter(t =>
-        t.type !== 'expense' && t.status !== 'settled'
-    );
+    const handleDeleteTransaction = (transaction: Transaction) => {
+        showAlert(
+            'Delete transaction?',
+            'This action cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await deleteTransaction(transaction.id);
+                        loadTransactions();
+                        loadSummary();
+                    }
+                }
+            ]
+        );
+    };
 
-    const overdueTransactions = activeTransactions.filter(t => {
-        if (!t.dueDate) return false;
-        return getDueDateStatus(t.dueDate).status === 'overdue';
-    });
-
-    const upcomingDueTransactions = activeTransactions
-        .filter(t => t.dueDate && getDueDateStatus(t.dueDate).status !== 'overdue')
-        .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
-        .slice(0, 3);
+    const overdueTransactions = transactions
+        .filter(t => t.type !== 'expense' && t.status !== 'settled')
+        .filter(t => t.dueDate && getDueDateStatus(t.dueDate).status === 'overdue');
 
     return (
         <View className="flex-1 bg-slate-100 dark:bg-dark-bg">
@@ -202,7 +206,9 @@ export const DashboardScreen: React.FC = () => {
                                 <View className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl justify-center items-center mr-3">
                                     <Text className="text-lg">💵</Text>
                                 </View>
-                                <Text className="text-slate-500 dark:text-slate-400 text-sm flex-1">To Receive</Text>
+                                <Text className="text-slate-500 dark:text-slate-400 text-sm flex-1">
+                                    To Receive {summary?.lendCount ? `(${summary.lendCount})` : ''}
+                                </Text>
                             </View>
                             <Text className="text-green-600 dark:text-green-400 text-xl font-bold">{formatCurrency(summary?.totalLent || 0, settings.currencySymbol)}</Text>
                         </View>
@@ -211,7 +217,9 @@ export const DashboardScreen: React.FC = () => {
                                 <View className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl justify-center items-center mr-3">
                                     <Text className="text-lg">💳</Text>
                                 </View>
-                                <Text className="text-slate-500 dark:text-slate-400 text-sm flex-1">To Pay</Text>
+                                <Text className="text-slate-500 dark:text-slate-400 text-sm flex-1">
+                                    To Pay {summary?.borrowCount ? `(${summary.borrowCount})` : ''}
+                                </Text>
                             </View>
                             <Text className="text-red-600 dark:text-red-400 text-xl font-bold">{formatCurrency(summary?.totalBorrowed || 0, settings.currencySymbol)}</Text>
                         </View>
@@ -322,7 +330,7 @@ export const DashboardScreen: React.FC = () => {
                 <View className="px-5 py-4">
                     <View className="flex-row items-center justify-between mb-3">
                         <Text className="text-lg font-bold text-slate-800 dark:text-white">Recent History</Text>
-                        {transactions.length > 5 && (
+                        {transactions.length > 4 && (
                             <TouchableOpacity onPress={handleViewAll}>
                                 <Text className="text-primary-500 font-semibold">View All ›</Text>
                             </TouchableOpacity>
@@ -338,15 +346,29 @@ export const DashboardScreen: React.FC = () => {
                             </Text>
                         </View>
                     ) : (
-                        recentTransactions.map((transaction) => (
-                            <TransactionCard
-                                key={transaction.id}
-                                transaction={transaction}
-                                currencySymbol={settings.currencySymbol}
-                                onPress={() => handleTransactionPress(transaction)}
-                                onLongPress={() => handleTransactionLongPress(transaction)}
-                            />
-                        ))
+                        <>
+                            {recentTransactions.map((transaction) => (
+                                <TransactionCard
+                                    key={transaction.id}
+                                    transaction={transaction}
+                                    currencySymbol={settings.currencySymbol}
+                                    onPress={() => handleTransactionPress(transaction)}
+                                    onLongPress={() => handleTransactionLongPress(transaction)}
+                                    onDelete={() => handleDeleteTransaction(transaction)}
+                                />
+                            ))}
+
+                            {transactions.length > 4 && (
+                                <TouchableOpacity
+                                    onPress={handleViewAll}
+                                    className="bg-white dark:bg-dark-card p-4 rounded-2xl items-center mt-1 border border-slate-100 dark:border-slate-800 shadow-sm"
+                                >
+                                    <Text className="text-primary-600 dark:text-primary-400 font-semibold">
+                                        View All Transactions ({transactions.length})
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </>
                     )}
                 </View>
 
@@ -356,6 +378,5 @@ export const DashboardScreen: React.FC = () => {
         </View>
     );
 };
-
 
 export default DashboardScreen;

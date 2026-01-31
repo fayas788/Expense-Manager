@@ -6,7 +6,6 @@ import { STORAGE_KEYS, CURRENCIES } from '../utils/constants';
 const DEFAULT_SETTINGS: AppSettings = {
     currency: 'INR',
     currencySymbol: '₹',
-    darkMode: false,
     biometricEnabled: false,
     autoLockMinutes: 5,
     pinLength: 4
@@ -20,7 +19,6 @@ interface SettingsState {
     loadSettings: () => Promise<void>;
     updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
     setCurrency: (code: string) => Promise<void>;
-    toggleDarkMode: () => Promise<void>;
     toggleBiometric: () => Promise<void>;
     setAutoLockMinutes: (minutes: number) => Promise<void>;
 }
@@ -64,10 +62,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
                 currencySymbol: currency.symbol
             });
         }
-    },
-
-    toggleDarkMode: async () => {
-        await get().updateSettings({ darkMode: !get().settings.darkMode });
     },
 
     toggleBiometric: async () => {

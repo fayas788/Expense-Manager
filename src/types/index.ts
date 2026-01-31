@@ -57,7 +57,6 @@ export interface Person {
 export interface AppSettings {
     currency: string;
     currencySymbol: string;
-    darkMode: boolean;
     biometricEnabled: boolean;
     autoLockMinutes: number;
     pinLength: number;
@@ -70,6 +69,8 @@ export interface DashboardSummary {
     totalExpenses: number;
     netBalance: number;
     monthlyExpenses: number;
+    borrowCount?: number;
+    lendCount?: number;
 }
 
 export interface CategorySummary {

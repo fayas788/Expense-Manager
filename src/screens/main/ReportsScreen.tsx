@@ -412,21 +412,46 @@ export const ReportsScreen: React.FC = () => {
                 {/* Expense Trend Chart */}
                 <View className="px-5 py-4">
                     <Text className="text-lg font-bold text-slate-800 mb-3">📈 Expense Trend</Text>
-                    <View className="bg-white rounded-2xl p-3 items-center shadow-sm" style={{ shadowColor: '#6366F1', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
+                    <View className="bg-white rounded-3xl p-4 items-center shadow-sm" style={{ shadowColor: '#6366F1', shadowOpacity: 0.08, shadowRadius: 10, elevation: 4 }}>
                         <LineChart
                             data={lineChartData}
-                            width={screenWidth - 50}
-                            height={200}
+                            width={screenWidth - 48} // Use more width
+                            height={220}
+                            yAxisLabel={settings.currencySymbol}
                             chartConfig={{
-                                ...chartConfig,
-                                color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
-                                labelColor: (opacity = 1) => `rgba(100, 116, 139, ${opacity})`,
-                                propsForDots: { r: "4", strokeWidth: "2", stroke: "#6366F1" }
+                                backgroundColor: '#ffffff',
+                                backgroundGradientFrom: '#ffffff',
+                                backgroundGradientTo: '#ffffff',
+                                decimalPlaces: 0,
+                                color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`, // Primary indigo
+                                labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`, // Slate-400
+                                style: {
+                                    borderRadius: 16
+                                },
+                                propsForDots: {
+                                    r: "5",
+                                    strokeWidth: "2",
+                                    stroke: "#6366F1",
+                                    fill: "#ffffff" // Hollow look
+                                },
+                                fillShadowGradient: '#6366F1', // Method to enable gradient fill
+                                fillShadowGradientOpacity: 0.15,
+                                fillShadowGradientFrom: '#6366F1',
+                                fillShadowGradientTo: '#ffffff',
                             }}
                             bezier
-                            style={{ marginVertical: 8, borderRadius: 16 }}
+                            style={{
+                                marginVertical: 8,
+                                borderRadius: 16,
+                                paddingRight: 30 // Padding for y-axis labels
+                            }}
                             withInnerLines={false}
                             withOuterLines={false}
+                            withVerticalLines={false}
+                            withHorizontalLines={true} // Add minimal horizontal guides
+                            withVerticalLabels={true}
+                            withHorizontalLabels={true}
+                            fromZero
                         />
                     </View>
                 </View>

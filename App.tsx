@@ -1,12 +1,14 @@
 import './global.css';
 import React, { useEffect, useCallback } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
+import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 
 import { AppNavigator } from './src/navigation';
+import { useSettingsStore } from './src/stores';
 
 import { CustomAlert } from './src/components/common/CustomAlert';
 
@@ -26,6 +28,13 @@ SplashScreen.preventAutoHideAsync().catch(console.warn);
 
 export default function App() {
   console.log("App component mounting...");
+
+  // Force light mode
+  const { setColorScheme } = useNativeWindColorScheme();
+
+  useEffect(() => {
+    setColorScheme('light');
+  }, [setColorScheme]);
 
   const onLayoutRootView = useCallback(async () => {
     // This tells the splash screen to hide immediately! If we do this as soon as we render the root view,

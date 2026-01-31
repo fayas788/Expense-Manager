@@ -268,12 +268,22 @@ export const getTransactionsByDateRange = async (
  * Get payments for a transaction
  */
 export const getPaymentsByTransaction = async (transactionId: string): Promise<Payment[]> => {
-    const db = getDatabase();
-    const rows = await db.getAllAsync<any>(
-        'SELECT * FROM payments WHERE transaction_id = ? ORDER BY date DESC',
-        [transactionId]
-    );
-    return rows.map(mapRowToPayment);
+    if (!transactionId) {
+        console.warn('getPaymentsByTransaction called with empty ID');
+        return [];
+    }
+
+    try {
+        const db = getDatabase();
+        const rows = await db.getAllAsync<any>(
+            'SELECT * FROM payments WHERE transaction_id = ? ORDER BY date DESC',
+            [String(transactionId)]
+        );
+        return rows.map(mapRowToPayment);
+    } catch (error) {
+        console.error(`Error getting payments for ID ${transactionId}:`, error);
+        return [];
+    }
 };
 
 /**
@@ -381,7 +391,9 @@ export const getDashboardSummary = async (): Promise<DashboardSummary> => {
     SELECT
       COALESCE(SUM(CASE WHEN type = 'borrow' AND status != 'settled' THEN remaining_amount ELSE 0 END), 0) as total_borrowed,
       COALESCE(SUM(CASE WHEN type = 'lend' AND status != 'settled' THEN remaining_amount ELSE 0 END), 0) as total_lent,
-      COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expenses
+      COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expenses,
+      COUNT(CASE WHEN type = 'borrow' AND status != 'settled' THEN 1 END) as borrow_count,
+      COUNT(CASE WHEN type = 'lend' AND status != 'settled' THEN 1 END) as lend_count
     FROM transactions
   `);
 
@@ -401,7 +413,9 @@ export const getDashboardSummary = async (): Promise<DashboardSummary> => {
         totalLent: result?.total_lent || 0,
         totalExpenses: result?.total_expenses || 0,
         netBalance: (result?.total_lent || 0) - (result?.total_borrowed || 0),
-        monthlyExpenses: monthlyResult?.monthly_expenses || 0
+        monthlyExpenses: monthlyResult?.monthly_expenses || 0,
+        borrowCount: result?.borrow_count || 0,
+        lendCount: result?.lend_count || 0
     };
 };
 

@@ -19,7 +19,7 @@ import { Category } from '../../types';
 
 export const SettingsScreen: React.FC = () => {
     const navigation = useNavigation<any>();
-    const { settings, toggleDarkMode, setCurrency, toggleBiometric, setAutoLockMinutes } = useSettingsStore();
+    const { settings, setCurrency, toggleBiometric, setAutoLockMinutes } = useSettingsStore();
     const { logout, clearPin, deleteAccount } = useAuthStore();
     const { showAlert } = useUIStore();
     const {
@@ -129,10 +129,6 @@ export const SettingsScreen: React.FC = () => {
         setCurrency(currencyCode);
         setCurrencyModalVisible(false);
         showAlert('Success', 'Currency updated!');
-    };
-
-    const handleDarkModeToggle = () => {
-        toggleDarkMode();
     };
 
     const handleClearAllData = () => {
@@ -397,21 +393,6 @@ export const SettingsScreen: React.FC = () => {
                         icon="💱"
                         gradientColors={['#22C55E', '#16A34A']}
                         onPress={() => setCurrencyModalVisible(true)}
-                    />
-
-                    <SettingItem
-                        title="Dark Mode"
-                        subtitle={settings.darkMode ? 'Enabled' : 'Disabled'}
-                        icon="🌙"
-                        gradientColors={['#374151', '#1F2937']}
-                        rightElement={
-                            <Switch
-                                value={settings.darkMode}
-                                onValueChange={handleDarkModeToggle}
-                                trackColor={{ false: '#CBD5E1', true: '#6366F1' }}
-                                thumbColor={settings.darkMode ? '#fff' : '#f4f4f5'}
-                            />
-                        }
                     />
 
                     <SettingItem

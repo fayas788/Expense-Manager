@@ -142,7 +142,7 @@ export const AddTransactionScreen: React.FC = () => {
             }
         }
 
-        if (!category) {
+        if (type === 'expense' && !category) {
             newErrors.category = 'Please select a category';
         }
 
@@ -158,12 +158,12 @@ export const AddTransactionScreen: React.FC = () => {
             const transactionData = {
                 type,
                 amount: parseFloat(amount),
-                personName: type !== 'expense' ? personName : undefined,
-                category,
+                personName: personName.trim() || undefined,
+                category: type === 'expense' ? category : type, // Use type as category for non-expenses
                 description: description.trim() || undefined,
                 date: date.toISOString(),
                 dueDate: type !== 'expense' && dueDate ? dueDate.toISOString() : undefined,
-                status: 'pending' as TransactionStatus,
+                status: (type === 'expense' ? 'settled' : 'pending') as TransactionStatus,
                 remainingAmount: parseFloat(amount),
                 receiptImages: receiptImages.length > 0 ? receiptImages : undefined
             };
@@ -263,50 +263,54 @@ export const AddTransactionScreen: React.FC = () => {
                     error={errors.amount}
                 />
 
-                {/* Person Name (for borrow/lend) */}
-                {type !== 'expense' && (
-                    <Input
-                        label={type === 'borrow' ? 'Borrowed From' : 'Lent To'}
-                        placeholder="Enter person's name"
-                        value={personName}
-                        onChangeText={setPersonName}
-                        error={errors.personName}
-                    />
-                )}
+                {/* Person Name / Payee */}
+                <Input
+                    label={
+                        type === 'borrow' ? 'Borrowed From' :
+                            type === 'lend' ? 'Lent To' :
+                                'Payee / Paid To'
+                    }
+                    placeholder={type === 'expense' ? "Enter payee name (optional)" : "Enter person's name"}
+                    value={personName}
+                    onChangeText={setPersonName}
+                    error={errors.personName}
+                />
 
-                {/* Category */}
-                <View className="mb-4">
-                    <Text className="text-slate-700 font-medium mb-2 text-sm">Category</Text>
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        className="flex-row"
-                    >
-                        {categories.map((cat) => (
-                            <TouchableOpacity
-                                key={cat.id}
-                                onPress={() => setCategory(cat.id)}
-                                className={`px-4 py-3 rounded-xl mr-2 flex-row items-center ${category === cat.id ? 'border-2' : 'bg-white'
-                                    }`}
-                                style={{
-                                    borderColor: category === cat.id ? cat.color : 'transparent',
-                                    backgroundColor: category === cat.id ? `${cat.color}15` : '#fff'
-                                }}
-                            >
-                                <Text className="text-lg mr-2">{cat.icon}</Text>
-                                <Text
-                                    className="font-medium"
-                                    style={{ color: category === cat.id ? cat.color : '#64748B' }}
+                {/* Category (Expenses Only) */}
+                {type === 'expense' && (
+                    <View className="mb-4">
+                        <Text className="text-slate-700 font-medium mb-2 text-sm">Category</Text>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            className="flex-row"
+                        >
+                            {categories.map((cat) => (
+                                <TouchableOpacity
+                                    key={cat.id}
+                                    onPress={() => setCategory(cat.id)}
+                                    className={`px-4 py-3 rounded-xl mr-2 flex-row items-center ${category === cat.id ? 'border-2' : 'bg-white'
+                                        }`}
+                                    style={{
+                                        borderColor: category === cat.id ? cat.color : 'transparent',
+                                        backgroundColor: category === cat.id ? `${cat.color}15` : '#fff'
+                                    }}
                                 >
-                                    {cat.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                    {errors.category && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.category}</Text>
-                    )}
-                </View>
+                                    <Text className="text-lg mr-2">{cat.icon}</Text>
+                                    <Text
+                                        className="font-medium"
+                                        style={{ color: category === cat.id ? cat.color : '#64748B' }}
+                                    >
+                                        {cat.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                        {errors.category && (
+                            <Text className="text-red-500 text-xs mt-1">{errors.category}</Text>
+                        )}
+                    </View>
+                )}
 
                 {/* Date */}
                 <View className="mb-4">
