@@ -8,6 +8,7 @@ interface PinPadProps {
     onBiometric?: () => void;
     showBiometric?: boolean;
     disabled?: boolean;
+    theme?: 'default' | 'light';
 }
 
 export const PinPad: React.FC<PinPadProps> = ({
@@ -15,7 +16,8 @@ export const PinPad: React.FC<PinPadProps> = ({
     onDelete,
     onBiometric,
     showBiometric = false,
-    disabled = false
+    disabled = false,
+    theme = 'default'
 }) => {
     const handlePress = async (digit: string) => {
         if (disabled) return;
@@ -57,8 +59,9 @@ export const PinPad: React.FC<PinPadProps> = ({
                                     key={colIndex}
                                     onPress={handleDelete}
                                     disabled={disabled}
+                                    theme={theme}
                                 >
-                                    <Text className="text-2xl text-slate-700">⌫</Text>
+                                    <Text className={`text-2xl ${theme === 'light' ? 'text-white' : 'text-slate-700'}`}>⌫</Text>
                                 </PinButton>
                             );
                         }
@@ -69,6 +72,7 @@ export const PinPad: React.FC<PinPadProps> = ({
                                     key={colIndex}
                                     onPress={handleBiometric}
                                     disabled={disabled}
+                                    theme={theme}
                                 >
                                     <Text className="text-2xl">👆</Text>
                                 </PinButton>
@@ -80,8 +84,9 @@ export const PinPad: React.FC<PinPadProps> = ({
                                 key={colIndex}
                                 onPress={() => handlePress(item)}
                                 disabled={disabled}
+                                theme={theme}
                             >
-                                <Text className="text-3xl font-semibold text-slate-800">{item}</Text>
+                                <Text className={`text-3xl font-semibold ${theme === 'light' ? 'text-white' : 'text-slate-800'}`}>{item}</Text>
                             </PinButton>
                         );
                     })}
@@ -95,14 +100,15 @@ interface PinButtonProps {
     onPress: () => void;
     disabled?: boolean;
     children: React.ReactNode;
+    theme: 'default' | 'light';
 }
 
-const PinButton: React.FC<PinButtonProps> = ({ onPress, disabled, children }) => {
+const PinButton: React.FC<PinButtonProps> = ({ onPress, disabled, children, theme }) => {
     return (
         <Pressable
             onPress={onPress}
             disabled={disabled}
-            className="w-20 h-20 mx-2 rounded-full bg-slate-100 justify-center items-center active:bg-slate-200"
+            className={`w-20 h-20 mx-2 rounded-full justify-center items-center ${theme === 'light' ? 'bg-white/20 active:bg-white/30' : 'bg-slate-100 active:bg-slate-200'}`}
             style={({ pressed }) => ({
                 opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
                 transform: [{ scale: pressed ? 0.95 : 1 }]

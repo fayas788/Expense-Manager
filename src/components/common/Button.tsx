@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, View, StyleProp, ViewStyle, TextStyle } from 'react-native';
 
 interface ButtonProps {
     title: string;
@@ -10,6 +10,8 @@ interface ButtonProps {
     loading?: boolean;
     icon?: React.ReactNode;
     fullWidth?: boolean;
+    style?: StyleProp<ViewStyle>;
+    textStyle?: StyleProp<TextStyle>;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -20,7 +22,9 @@ export const Button: React.FC<ButtonProps> = ({
     disabled = false,
     loading = false,
     icon,
-    fullWidth = false
+    fullWidth = false,
+    style,
+    textStyle
 }) => {
     const getVariantClasses = () => {
         switch (variant) {
@@ -87,7 +91,7 @@ export const Button: React.FC<ButtonProps> = ({
         ${getSizeClasses()}
         ${fullWidth ? 'w-full' : ''}
       `}
-            style={{ opacity: disabled || loading ? 0.6 : 1 }}
+            style={[{ opacity: disabled || loading ? 0.6 : 1 }, style]}
         >
             {loading ? (
                 <ActivityIndicator
@@ -96,7 +100,10 @@ export const Button: React.FC<ButtonProps> = ({
             ) : (
                 <>
                     {icon && <View className="mr-2">{icon}</View>}
-                    <Text className={`font-semibold ${getTextClasses()} ${getTextSize()}`}>
+                    <Text
+                        className={`font-semibold ${getTextClasses()} ${getTextSize()}`}
+                        style={textStyle}
+                    >
                         {title}
                     </Text>
                 </>

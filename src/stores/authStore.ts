@@ -11,6 +11,7 @@ import {
     isBiometricEnabled,
     authenticateWithBiometric
 } from '../services/security/biometricService';
+import { clearAllData } from '../services/database';
 import * as SecureStore from 'expo-secure-store';
 import { STORAGE_KEYS } from '../utils/constants';
 
@@ -32,6 +33,7 @@ interface AuthState {
     updateLockTimer: () => void;
     clearError: () => void;
     clearPin: () => Promise<void>;
+    deleteAccount: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -139,6 +141,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({ isPinSet: false, isAuthenticated: false });
         } catch (error) {
             console.error('Error clearing PIN:', error);
+        }
+    },
+
+    deleteAccount: async () => {
+        try {
+            set({ isLoading: true });
+
+            // Clear database data
+            await clearAllData();
+
+            // Clear security credentials
+            await SecureStore.deleteItemAsync(STORAGE_KEYS.PIN_HASH);
+            await SecureStore.deleteItemAsync(STORAGE_KEYS.PIN_SALT);
+
+            set({
+                isPinSet: false,
+                isAuthenticated: false,
+                isLoading: false,
+                isBiometricEnabled: false
+            });
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            set({ isLoading: false, error: 'Failed to delete account' });
+            throw error;
         }
     }
 }));

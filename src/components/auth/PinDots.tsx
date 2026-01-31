@@ -13,6 +13,7 @@ interface PinDotsProps {
     maxLength: number;
     error?: boolean;
     success?: boolean;
+    theme?: 'default' | 'light';
 }
 
 export const PinDots: React.FC<PinDotsProps> = ({
@@ -20,7 +21,8 @@ export const PinDots: React.FC<PinDotsProps> = ({
     filled,
     maxLength,
     error,
-    success
+    success,
+    theme = 'default'
 }) => {
     const dots = Array(maxLength).fill(0);
 
@@ -32,6 +34,7 @@ export const PinDots: React.FC<PinDotsProps> = ({
                     filled={index < filled}
                     error={error}
                     success={success}
+                    theme={theme}
                 />
             ))}
         </View>
@@ -42,14 +45,23 @@ interface PinDotProps {
     filled: boolean;
     error?: boolean;
     success?: boolean;
+    theme: 'default' | 'light';
 }
 
-const PinDot: React.FC<PinDotProps> = ({ filled, error, success }) => {
+const PinDot: React.FC<PinDotProps> = ({ filled, error, success, theme }) => {
     const animatedStyle = useAnimatedStyle(() => {
         let backgroundColor = filled ? '#6366F1' : '#E2E8F0';
 
-        if (error) backgroundColor = '#EF4444';
-        if (success) backgroundColor = '#22C55E';
+        if (theme === 'light') {
+            backgroundColor = filled ? '#FFFFFF' : 'rgba(255, 255, 255, 0.3)';
+        }
+
+        if (error) {
+            backgroundColor = theme === 'light' ? '#FECACA' : '#EF4444';
+        }
+        if (success) {
+            backgroundColor = theme === 'light' ? '#86EFAC' : '#22C55E';
+        }
 
         return {
             transform: [{

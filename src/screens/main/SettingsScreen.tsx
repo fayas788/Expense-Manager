@@ -20,7 +20,7 @@ import { Category } from '../../types';
 export const SettingsScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const { settings, toggleDarkMode, setCurrency, toggleBiometric, setAutoLockMinutes } = useSettingsStore();
-    const { logout, clearPin } = useAuthStore();
+    const { logout, clearPin, deleteAccount } = useAuthStore();
     const { showAlert } = useUIStore();
     const {
         categories,
@@ -153,6 +153,42 @@ export const SettingsScreen: React.FC = () => {
                         } catch (error) {
                             showAlert('Error', 'Failed to clear data');
                         }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleDeleteAccount = () => {
+        showAlert(
+            '❌ Delete Account',
+            'Are you sure you want to delete your account? This will permanently wipe ALL data, including transactions, settings, and your PIN. This action is irreversible.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete Account',
+                    style: 'destructive',
+                    onPress: () => {
+                        // Double confirmation
+                        showAlert(
+                            '⚠️ Final Warning',
+                            'This is your last chance to cancel. All data will be lost forever.',
+                            [
+                                { text: 'Stop', style: 'cancel' },
+                                {
+                                    text: 'Yes, Delete',
+                                    style: 'destructive',
+                                    onPress: async () => {
+                                        try {
+                                            await deleteAccount();
+                                            // The user will be redirected to onboarding by the root navigator listening to isAuthenticated/isPinSet
+                                        } catch (error) {
+                                            showAlert('Error', 'Failed to delete account');
+                                        }
+                                    }
+                                }
+                            ]
+                        );
                     }
                 }
             ]
@@ -405,6 +441,13 @@ export const SettingsScreen: React.FC = () => {
                         icon="🗑️"
                         danger
                         onPress={handleClearAllData}
+                    />
+                    <SettingItem
+                        title="Delete Account"
+                        subtitle="Permanently delete account"
+                        icon="💀"
+                        danger
+                        onPress={handleDeleteAccount}
                     />
                 </View>
 
